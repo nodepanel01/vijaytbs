@@ -124,14 +124,15 @@ router.get('/update-sl', async function (req, res) {
         let openOrdersData = req.query?.accountType === 'spot' ? await bybitClient.fetchPosition(symbol) : await bybitClient1.fetchPosition(symbol);
         if (openOrdersData.info.side != '') {
           let getValue = (((openOrdersData.unrealizedPnl / openOrdersData.contracts) * 100) / openOrdersData.entryPrice).toFixed(6);
-          if (Math.abs(getValue) > 0 && Math.abs(getValue) > Number(req.query?.tradeProfit)) {
-            let calculateSlPercentage = Math.floor(Math.abs(getValue) / Number(req.query?.tradeProfit))
+          if (Number(getValue) > 0 && Number(getValue) > Number(req.query?.tradeProfit)) {
+            let calculateSlPercentage = Math.floor(Number(getValue) / Number(req.query?.tradeProfit))
             if (Number(calculateSlPercentage) > 0) {
-              let newSlPer = calculateSlPercentage * Number(req.query?.tradeUpSl);
+              let newSlPer = (calculateSlPercentage * Number(req.query?.tradeUpSl));
+              let finalSlPercent = req.query?.stopLossPr > newSlPer ? req.query?.stopLossPr - newSlPer : 0.1
               const openOrders = req.query?.accountType === 'spot' ? await bybitClient.fetchOpenOrders(req.query?.instrument_token) : await bybitClient1.fetchOpenOrders(req.query?.instrument_token);
               const partialStopLossOrder = openOrders.find(order => order.info.stopOrderType === "PartialStopLoss");
               let currentStoploss = partialStopLossOrder?.info?.triggerPrice;
-              let newSlPrice = (openOrdersData.info.side == 'Buy') ? calculateBuyTPSL(currentStoploss, newSlPer) : calculateSellTPSL(currentStoploss, newSlPer);
+              let newSlPrice = (openOrdersData.info.side == 'Sell') ? calculateBuyTPSL(openOrdersData.entryPrice, finalSlPercent) : calculateSellTPSL(openOrdersData.entryPrice, finalSlPercent);
 
               if ((openOrdersData.info.side == 'Buy' && newSlPrice > currentStoploss) || (openOrdersData.info.side == 'Sell' && newSlPrice < currentStoploss)) {
                 if (openOrders.length != 0) {
