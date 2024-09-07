@@ -327,7 +327,7 @@ router.get('/historical-data', async function (req, res) {
       } ,
     });
   } catch (err) {
-    await teleStockMsg("---> Bybit api token data featch failed");
+    await teleStockMsg("---> Vijay Bybit api token data featch failed");
     res.send({
       status_api: err.code ? err.code : 400,
       message: (err && err.message) || 'Something went wrong',
