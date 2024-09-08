@@ -249,7 +249,7 @@ setInterval(function setup() {
       testServer();
     }
   })
-}, 19000)
+}, 24000)
 
 function testServer(){   
   request({
