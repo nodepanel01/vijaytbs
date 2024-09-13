@@ -878,6 +878,12 @@ router.get('/symbolData', async function (req, res) {
       async function () {
         const symbolsAndQuantities = await bybitClient1.loadMarkets();
         const convertedData = Object.values(symbolsAndQuantities);
+        // Iterate over each symbol and remove price field if it's an empty object or null
+        convertedData.forEach(symbol => {
+          if (symbol.limits && symbol.limits.price && Object.keys(symbol.limits.price).length === 0) {
+            delete symbol.limits.price;  // Remove empty price field
+          }
+        });
         return convertedData;
       },
     ]);
