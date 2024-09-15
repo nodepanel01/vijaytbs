@@ -870,23 +870,74 @@ async function getNextTrend(req, data, cursor) {
 }
 
 /** bybit symbol data */
+// router.get('/symbolData', async function (req, res) {
+//   try {
+//     await bybitClient1.load_time_difference();
+//     // Get market symbols and quantities
+//     const bybitBalance = await async.waterfall([
+//       async function () {
+//         const symbolsAndQuantities = await bybitClient1.loadMarkets();
+//         const convertedData = Object.values(symbolsAndQuantities);
+//         // Iterate over each symbol and remove price field if it's an empty object or null
+//         convertedData.forEach(symbol => {
+//           if (symbol.limits && symbol.limits.price && Object.keys(symbol.limits.price).length === 0) {
+//             delete symbol.limits.price;  // Remove empty price field
+//           }
+//         });
+//         return convertedData;
+//       },
+//     ]);
+//     res.send({
+//       status_api: 200,
+//       message: 'Bybit token single open order position successfully',
+//       data: bybitBalance,
+//     });
+//   } catch (err) {
+//     await teleStockMsg("---> Bybit token single open order position failed");
+//     res.send({
+//       status_api: err.code ? err.code : 400,
+//       message: (err && err.message) || 'Something went wrong',
+//       data: err.data ? err.data : null,
+//     });
+//   }
+// });
+
 router.get('/symbolData', async function (req, res) {
   try {
     await bybitClient1.load_time_difference();
-    // Get market symbols and quantities
+    
     const bybitBalance = await async.waterfall([
       async function () {
         const symbolsAndQuantities = await bybitClient1.loadMarkets();
         const convertedData = Object.values(symbolsAndQuantities);
-        // Iterate over each symbol and remove price field if it's an empty object or null
-        convertedData.forEach(symbol => {
-          if (symbol.limits && symbol.limits.price && Object.keys(symbol.limits.price).length === 0) {
-            delete symbol.limits.price;  // Remove empty price field
+
+        let currentKey = req.query?.Type;  // Adjust this as per your requirement
+        const filteredData = convertedData.filter(item => item.type === currentKey);
+        console.log('filteredData: ', filteredData);
+
+        const cleanedData = filteredData.map(item => {
+          if (item.limits) {
+            switch (item.type) {
+              case 'spot':
+                if (item.limits.price) delete item.limits.price;
+                break;
+              case 'future':
+              case 'swap':
+                if (item.limits.cost) delete item.limits.cost;
+                break;
+              case 'option':
+                if (item.limits.leverage) delete item.limits.leverage;
+                if (item.limits.cost) delete item.limits.cost;
+                break;
+            }
           }
+          return item;
         });
-        return convertedData;
+
+        return cleanedData;
       },
     ]);
+
     res.send({
       status_api: 200,
       message: 'Bybit token single open order position successfully',
