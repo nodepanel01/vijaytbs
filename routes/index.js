@@ -913,7 +913,6 @@ router.get('/symbolData', async function (req, res) {
 
         let currentKey = req.query?.Type;  // Adjust this as per your requirement
         const filteredData = convertedData.filter(item => item.type === currentKey);
-        console.log('filteredData: ', filteredData);
 
         const cleanedData = filteredData.map(item => {
           if (item.limits) {
